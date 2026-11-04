@@ -9,7 +9,7 @@ class TaskController {
 
     public function index($error = null) {
         $tasks = $this->model->getAll();
-        require __DIR__ . '/../View/list.php'; // Envia para a View
+        require __DIR__ . '/../view/list.php'; // Envia para a View
     }
 
     public function create() {

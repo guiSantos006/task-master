@@ -1,7 +1,7 @@
 <?php
 // Sistema de Autoloading Nativo (PSR-0 simplificado)
 spl_autoload_register(function ($class) {
-    $dirs = ['Model', 'Controller', 'View'];
+    $dirs = ['model', 'controller', 'view'];
     foreach ($dirs as $dir) {
         $file = __DIR__ . "/src/$dir/$class.php";
         if (file_exists($file)) {
