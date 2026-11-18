@@ -1,0 +1,109 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 48px 20px;
+    background: #f3f4f6;
+    color: #333;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 8%);
+}
+
+h1 {
+    margin: 0;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #eee;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.form-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+}
+
+input {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font: inherit;
+}
+
+button {
+    padding: 10px 15px;
+    border: 0;
+    border-radius: 4px;
+    background: #2563eb;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+#cancelBtn {
+    background: #6b7280;
+}
+
+#taskList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+#taskList li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+#taskList li.done span {
+    color: #9ca3af;
+    text-decoration: line-through;
+}
+
+#taskList li div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+@media (max-width: 560px) {
+    body {
+        padding: 24px 12px;
+    }
+
+    .container {
+        padding: 22px 18px;
+    }
+
+    .form-group {
+        grid-template-columns: 1fr;
+    }
+
+    #taskList li {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

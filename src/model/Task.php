@@ -8,7 +8,9 @@ class Task {
 
     // Busca todas as tarefas
     public function getAll() {
-        $stmt = $this->pdo->query("SELECT * FROM tasks ORDER BY id DESC");
+        // rowid also gives existing SQLite rows an identifier when the legacy id
+        // column was declared as INT AUTO_INCREMENT instead of INTEGER PRIMARY KEY.
+        $stmt = $this->pdo->query("SELECT rowid AS id, title, description, due_date, done FROM tasks ORDER BY rowid DESC");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -26,11 +28,30 @@ class Task {
     }
 
     public function complete($id) {
-        return $this->pdo->exec("UPDATE tasks SET done = 1 WHERE id = " . (int)$id);
+        $stmt = $this->pdo->prepare("UPDATE tasks SET done = 1 WHERE rowid = :id");
+        $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function update($id, $title, $description, $dueDate) {
+        if (empty(trim($title)) || empty(trim($dueDate))) {
+            throw new Exception("Título e Data são obrigatórios.");
+        }
+
+        $stmt = $this->pdo->prepare(
+            "UPDATE tasks SET title = :title, description = :description, due_date = :due_date WHERE rowid = :id"
+        );
+        $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+        $stmt->bindValue(':title', $title);
+        $stmt->bindValue(':description', $description);
+        $stmt->bindValue(':due_date', $dueDate);
+        return $stmt->execute();
     }
 
     public function delete($id) {
-        return $this->pdo->exec("DELETE FROM tasks WHERE id = " . (int)$id);
+        $stmt = $this->pdo->prepare("DELETE FROM tasks WHERE rowid = :id");
+        $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+        return $stmt->execute();
     }
 }
 ?>

@@ -8,51 +8,126 @@ class TaskViewModel {
     async init() {
         // Mapeia elementos da View
         this.listElement = document.getElementById('taskList');
+        this.formElement = document.getElementById('taskForm');
         this.inputElement = document.getElementById('taskTitle');
+        this.descriptionElement = document.getElementById('taskDescription');
+        this.dueDateElement = document.getElementById('taskDueDate');
         this.addBtn = document.getElementById('addBtn');
+        this.cancelBtn = document.getElementById('cancelBtn');
 
-        // Eventos da View que disparam ações na ViewModel
-        this.addBtn.onclick = () => this.addTask();
+        this.formElement.onsubmit = event => {
+            event.preventDefault();
+            this.saveTask();
+        };
+        this.cancelBtn.onclick = () => this.resetForm();
 
-        // Busca os dados iniciais
-        await this.fetchTasks();
+        try {
+            await this.fetchTasks();
+        } catch (error) {
+            alert(error.message);
+        }
     }
 
-    // Busca dados da API PHP
+    async request(url, options) {
+        const response = await fetch(url, options);
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || 'A operação não foi concluída.');
+        }
+        return result;
+    }
+
     async fetchTasks() {
-        const response = await fetch('api.php?action=list');
-        this.tasks = await response.json();
-        this.render(); // Atualiza a View (Data Binding)
+        this.tasks = await this.request('api.php?action=list');
+        this.render();
     }
 
-    async addTask() {
-        const title = this.inputElement.value;
-        if (!title) return alert("Digite algo!");
+    async saveTask() {
+        const task = {
+            title: this.inputElement.value,
+            description: this.descriptionElement.value,
+            due_date: this.dueDateElement.value
+        };
+        const isEditing = this.editingTaskId !== undefined;
+        const action = isEditing ? 'update' : 'create';
+        if (isEditing) task.id = this.editingTaskId;
 
-        await fetch('api.php?action=create', {
-            method: 'POST',
-            body: JSON.stringify({ title: title, description: '', due_date: '' })
-        });
+        try {
+            await this.request(`api.php?action=${action}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(task)
+            });
 
-        this.inputElement.value = '';
-        await this.fetchTasks();
+            this.resetForm();
+            await this.fetchTasks();
+        } catch (error) {
+            alert(error.message);
+        }
     }
 
     async deleteTask(id) {
-        await fetch(`api.php?action=delete&id=${id}`);
-        await this.fetchTasks();
+        try {
+            await this.request(`api.php?action=delete&id=${encodeURIComponent(id)}`);
+            await this.fetchTasks();
+        } catch (error) {
+            alert(error.message);
+        }
     }
 
-    // O "Binder": Sincroniza o array de tarefas com o HTML
+    async completeTask(id) {
+        try {
+            await this.request(`api.php?action=complete&id=${encodeURIComponent(id)}`);
+            await this.fetchTasks();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    editTask(task) {
+        this.editingTaskId = task.id;
+        this.inputElement.value = task.title;
+        this.descriptionElement.value = task.description || '';
+        this.dueDateElement.value = task.due_date;
+        this.addBtn.textContent = 'Salvar alterações';
+        this.cancelBtn.hidden = false;
+        this.inputElement.focus();
+    }
+
+    resetForm() {
+        this.editingTaskId = undefined;
+        this.formElement.reset();
+        this.addBtn.textContent = 'Adicionar';
+        this.cancelBtn.hidden = true;
+    }
+
     render() {
         this.listElement.innerHTML = '';
         this.tasks.forEach(task => {
             const li = document.createElement('li');
             li.className = task.done ? 'done' : '';
-            li.innerHTML = `
-                <span>${task.title}</span>
-                <button onclick="vm.deleteTask(${task.id})">❌</button>
-            `;
+            const title = document.createElement('span');
+            title.textContent = task.title;
+            li.appendChild(title);
+
+            const actions = document.createElement('div');
+            if (!task.done) {
+                const completeButton = document.createElement('button');
+                completeButton.textContent = 'Concluir';
+                completeButton.onclick = () => this.completeTask(task.id);
+                actions.appendChild(completeButton);
+
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Editar';
+                editButton.onclick = () => this.editTask(task);
+                actions.appendChild(editButton);
+            }
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Excluir';
+            deleteButton.onclick = () => this.deleteTask(task.id);
+            actions.appendChild(deleteButton);
+            li.appendChild(actions);
             this.listElement.appendChild(li);
         });
     }
